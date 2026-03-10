@@ -1,5 +1,15 @@
 import json
 import os
+import sys
+
+# SQLAlchemy and several dependencies do not yet support Python 3.14+.
+if sys.version_info >= (3, 14):
+    print(
+        "This project requires Python 3.12 or 3.13. Python 3.14+ is not yet supported by SQLAlchemy.\n"
+        "Create a venv with: python3.12 -m venv venv   or   python3.13 -m venv venv",
+        file=sys.stderr,
+    )
+    sys.exit(1)
 
 from flask import (
     Flask,

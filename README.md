@@ -52,12 +52,14 @@ language-agnostic-chatbot/
 
 ## 3. Setup Instructions (VS Code / local)
 
+**Python version:** Use **Python 3.12 or 3.13**. Python 3.14+ is not yet supported (SQLAlchemy and some dependencies will fail).
+
 1. **Create & activate a virtual environment** (recommended):
 
    ```bash
-   cd /Users/mitaliagarwal/Desktop/language-agnostic-chatbot
-   python -m venv venv
-   source venv/bin/activate  # On Windows: venv\Scripts\activate
+   cd /path/to/language-agnostic-chatbot
+   python3.12 -m venv venv   # or: python3.13 -m venv venv
+   source venv/bin/activate   # On Windows: venv\Scripts\activate
    ```
 
 2. **Install dependencies**:
