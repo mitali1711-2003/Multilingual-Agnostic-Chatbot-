@@ -442,20 +442,6 @@ def create_app(config_class=DevConfig) -> Flask:
         with db_session() as s:
             conversation = _get_or_create_conversation(s)
 
-            # Build multi-turn context: include last few user messages.
-            previous_messages = (
-                s.query(Message)
-                .filter(
-                    Message.conversation_id == conversation.id,
-                    Message.sender == "user",
-                )
-                .order_by(Message.created_at.desc())
-                .limit(3)
-                .all()
-            )
-            context_snippets = [m.text for m in reversed(previous_messages)]
-            full_query = " ".join(context_snippets + [message]) if context_snippets else message
-
             user_lang = explicit_lang or detect_language(message)
 
             # Log user message
@@ -468,9 +454,12 @@ def create_app(config_class=DevConfig) -> Flask:
             s.add(user_msg)
             s.flush()
 
+            # Use only the current message for retrieval. Previous "multi-turn" context
+            # caused wrong answers (e.g. admission/hostel/canteen questions returning
+            # sports or hostel answers when earlier messages were about other topics).
             best_faq, ranked = retrieve_best_answer(
                 session=s,
-                user_query=full_query,
+                user_query=message,
                 lang_hint=user_lang,
                 campus_hint=campus_hint,
             )
@@ -567,6 +556,6 @@ def create_app(config_class=DevConfig) -> Flask:
 
 if __name__ == "__main__":
     app = create_app()
-    port = int(os.environ.get("PORT", 5000))
+    port = int(os.environ.get("PORT", 5001))
     app.run(host="0.0.0.0", port=port)
 

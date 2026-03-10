@@ -5,7 +5,7 @@ from typing import List, Tuple, Optional
 import numpy as np
 from langdetect import detect
 from sentence_transformers import SentenceTransformer
-from sqlalchemy import select, or_
+from sqlalchemy import select, or_, func
 from sqlalchemy.orm import Session
 
 from models import FAQ
@@ -38,13 +38,65 @@ CATEGORY_KEYWORDS = {
 
 
 def _detect_category_hint(query: str) -> Optional[str]:
-    """Return category if query clearly mentions a topic, else None."""
+    """
+    Return the most likely category for the query, or None.
+
+    Instead of returning the first category that matches a keyword (which can
+    bias towards generic categories like Admissions), we:
+    - Count how many keywords from each category appear in the query.
+    - Prefer the category with the highest match count.
+    - In case of ties, prefer more "specific" categories (e.g. Hostel) over
+      generic ones (e.g. Admissions).
+
+    This fixes cases like "hostel admission process", which previously matched
+    Admissions first and therefore returned generic admission FAQs instead of
+    hostel-related information.
+    """
     q = query.lower().strip()
+    if not q:
+        return None
+
+    # Categories ordered from more specific to more generic for tie‑breaking.
+    specificity_order = [
+        "Hostel",
+        "Library",
+        "Placements",
+        "Sports",
+        "Canteen",
+        "Transport",
+        "Scholarships",
+        "Computer Science",
+        "MBA",
+        "Arts",
+        "Academics",
+        "Facilities",
+        "Administration",
+        "Admissions",
+    ]
+    specificity_rank = {cat: idx for idx, cat in enumerate(specificity_order)}
+
+    scores = {}
     for category, keywords in CATEGORY_KEYWORDS.items():
+        count = 0
         for kw in keywords:
             if kw.lower() in q:
-                return category
-    return None
+                count += 1
+        if count > 0:
+            scores[category] = count
+
+    if not scores:
+        return None
+
+    # Pick category with highest score; break ties using specificity_order.
+    best_category = sorted(
+        scores.items(),
+        key=lambda item: (
+            -item[1],
+            specificity_rank.get(item[0], len(specificity_order)),
+        ),
+    )[0][0]
+
+    return best_category
 
 
 @lru_cache(maxsize=1)
@@ -131,8 +183,9 @@ def retrieve_best_answer(
             FAQ.campus.is_(None),
             FAQ.campus == "",
         )
+    # Match category case-insensitively so "Admissions" / "admissions" both work
     if category_hint:
-        base_filter = base_filter & (FAQ.category == category_hint)
+        base_filter = base_filter & (func.lower(FAQ.category) == category_hint.lower())
 
     faqs = (
         session.execute(select(FAQ).where(base_filter))
@@ -140,20 +193,11 @@ def retrieve_best_answer(
         .all()
     )
 
-    # If category filter returned nothing, retry without it
+    # When the user clearly asked about a topic (category_hint), do NOT fall back
+    # to other categories. Otherwise e.g. "Tell me about Admissions" can match
+    # "Tell me about hostel at the campus" and return the wrong answer.
     if not faqs and category_hint:
-        base_filter = FAQ.language == detected_lang
-        if campus_hint:
-            base_filter = base_filter & or_(
-                FAQ.campus == campus_hint,
-                FAQ.campus.is_(None),
-                FAQ.campus == "",
-            )
-        faqs = (
-            session.execute(select(FAQ).where(base_filter))
-            .scalars()
-            .all()
-        )
+        return None, []
 
     if not faqs:
         faqs = session.execute(select(FAQ)).scalars().all()
