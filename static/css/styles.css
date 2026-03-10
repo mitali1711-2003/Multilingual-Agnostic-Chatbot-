@@ -563,6 +563,13 @@ select:focus {
   color: #6b7280;
 }
 
+.field-hint {
+  display: block;
+  font-size: 0.8rem;
+  color: #64748b;
+  margin-top: 0.25rem;
+}
+
 .muted a {
   color: #4f46e5;
   font-weight: 500;

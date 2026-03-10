@@ -452,7 +452,11 @@ def create_app(config_class=DevConfig) -> Flask:
         with db_session() as s:
             conversation = _get_or_create_conversation(s)
 
-            user_lang = explicit_lang or detect_language(message)
+            # Use detected language of the message for retrieval so the answer is in the
+            # same language as the question. (Dropdown is for UI only; we no longer use it
+            # for FAQ search, which fixed wrong-language answers e.g. English questions
+            # returning Hindi replies when Hindi was selected.)
+            user_lang = detect_language(message)
 
             # Log user message
             user_msg = Message(
