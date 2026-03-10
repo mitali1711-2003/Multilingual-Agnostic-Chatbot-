@@ -1,0 +1,61 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>{% block title %}Campus Multilingual Chatbot{% endblock %}</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/styles.css') }}" />
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap"
+      rel="stylesheet"
+    />
+  </head>
+  <body>
+    <div class="page-shell">
+      <header class="top-nav">
+        <div class="brand">
+          <div class="brand-logo">🎓</div>
+          <div class="brand-text">
+            <span class="brand-title">Campus Helpdesk</span>
+            <span class="brand-subtitle">Multilingual Smart Assistant</span>
+          </div>
+        </div>
+        <nav class="nav-actions">
+          {% if current_user.is_authenticated %}
+          <span class="nav-user">Hi, {{ current_user.username }}</span>
+          {% if current_user.is_admin %}
+          <a class="nav-link" href="{{ url_for('admin_dashboard') }}">Admin</a>
+          {% endif %}
+          <a class="nav-link" href="{{ url_for('logout') }}">Logout</a>
+          {% else %}
+          <a class="nav-link" href="{{ url_for('login') }}">Login</a>
+          <a class="nav-link-outline" href="{{ url_for('register') }}">Register</a>
+          {% endif %}
+        </nav>
+      </header>
+
+      <main class="main-content">
+        {% with messages = get_flashed_messages(with_categories=true) %}
+        {% if messages %}
+        <div class="flash-container">
+          {% for category, message in messages %}
+          <div class="flash flash-{{ category }}">{{ message }}</div>
+          {% endfor %}
+        </div>
+        {% endif %}
+        {% endwith %}
+
+        {% block content %}{% endblock %}
+      </main>
+
+      <footer class="footer">
+        <span>© {{ 2026 }} Campus Multilingual Chatbot · Built with Flask & NLP</span>
+      </footer>
+    </div>
+
+    {% block scripts %}{% endblock %}
+  </body>
+</html>
+

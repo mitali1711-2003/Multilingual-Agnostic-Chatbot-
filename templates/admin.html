@@ -1,0 +1,259 @@
+{% extends "base.html" %}
+
+{% block title %}Admin · Campus Chatbot{% endblock %}
+
+{% block content %}
+<section class="admin-shell">
+  <div class="admin-grid">
+    <div class="admin-card">
+      <h1>Admin dashboard</h1>
+      <p class="sub">
+        Manage multilingual FAQs loaded from Kaggle or custom CSVs. The system
+        automatically builds NLP embeddings for smart matching.
+      </p>
+
+      {% if faq_count == 0 %}
+      <div class="dataset-alert dataset-alert--warning" role="alert">
+        <strong>Dataset not loaded.</strong> Load the default dataset or upload a CSV/JSON below to enable the chatbot.
+      </div>
+      {% elif faqs_with_embeddings < faq_count %}
+      <div class="dataset-alert dataset-alert--warning" role="alert">
+        <strong>Some FAQs lack embeddings.</strong> {{ faq_count - faqs_with_embeddings }} of {{ faq_count }} FAQs cannot be searched.
+        <button type="button" id="rebuild-embeddings-btn" class="btn-rebuild">Rebuild embeddings</button>
+        <span id="rebuild-status" class="muted"></span>
+      </div>
+      {% else %}
+      <div class="dataset-alert dataset-alert--ok" role="status">
+        ✓ Dataset ready. {{ faqs_with_embeddings }} FAQs with embeddings.
+      </div>
+      {% endif %}
+      <div class="stat-row">
+        <div class="stat">
+          <span class="label">Total FAQs</span>
+          <span class="value">{{ faq_count }}</span>
+        </div>
+        <div class="stat">
+          <span class="label">Conversations</span>
+          <span class="value">{{ conversation_count }}</span>
+        </div>
+        <div class="stat">
+          <span class="label">Messages</span>
+          <span class="value">{{ message_count }}</span>
+        </div>
+        <div class="stat">
+          <span class="label">Avg messages / conversation</span>
+          <span class="value">{{ avg_messages }}</span>
+        </div>
+      </div>
+
+      <div class="analytics-grid">
+        <div>
+          <h3>Language distribution</h3>
+          <ul class="analytics-list">
+            {% for lang, count in lang_distribution %}
+            <li>
+              <span class="label">
+                {{ lang or "unknown" }}
+              </span>
+              <span class="value small">{{ count }}</span>
+            </li>
+            {% else %}
+            <li class="muted">No messages yet.</li>
+            {% endfor %}
+          </ul>
+        </div>
+        <div>
+          <h3>Feedback summary</h3>
+          <ul class="analytics-list">
+            <li>
+              <span class="label">Helpful</span>
+              <span class="value small">{{ feedback_positive }}</span>
+            </li>
+            <li>
+              <span class="label">Not helpful</span>
+              <span class="value small">{{ feedback_negative }}</span>
+            </li>
+          </ul>
+        </div>
+        <div>
+          <h3>Top FAQs (by usage)</h3>
+          <ul class="analytics-list">
+            {% for question, hits in top_faqs %}
+            <li>
+              <span class="label">{{ question[:70] }}{% if question|length > 70 %}…{% endif %}</span>
+              <span class="value small">{{ hits }}</span>
+            </li>
+            {% else %}
+            <li class="muted">No FAQ usage data yet.</li>
+            {% endfor %}
+          </ul>
+        </div>
+      </div>
+    </div>
+
+    <div class="admin-card">
+      <h2>Load default dataset</h2>
+      <p class="muted">
+        One-click load of the bundled campus multilingual FAQ dataset (English, Hindi, Marathi).
+      </p>
+      <div class="field-group" style="margin-bottom: 0.5rem;">
+        <label for="load-default-campus">Campus (multi-campus)</label>
+        <input id="load-default-campus" type="text" value="Main Campus" placeholder="Main Campus" />
+      </div>
+      <button id="load-default-btn" class="btn-primary">Load campus_multilingual_dataset.json</button>
+      <p id="load-default-status" class="muted"></p>
+    </div>
+
+    <div class="admin-card">
+      <h2>Upload FAQ dataset (CSV or JSON)</h2>
+      <p class="muted">
+        CSV: <code>question</code>, <code>answer</code>, optional <code>language</code>, <code>category</code>.
+        JSON: <code>{"faqs": [{"question": "...", "answer": "...", "language": "en", "category": "..."}]}</code>
+      </p>
+
+      <form id="upload-form">
+        <div class="field-group">
+          <label for="file">File (CSV or JSON)</label>
+          <input id="file" name="file" type="file" accept=".csv,.json" required />
+        </div>
+
+        <div class="field-row">
+          <div class="field-group">
+            <label for="default_lang">Default language (if missing)</label>
+            <select id="default_lang" class="select">
+              {% for code, name in languages.items() %}
+              <option value="{{ code }}">{{ name }}</option>
+              {% endfor %}
+            </select>
+          </div>
+          <div class="field-group">
+            <label for="default_campus">Default campus (multi-campus)</label>
+            <input id="default_campus" type="text" value="Main Campus" placeholder="Main Campus" />
+          </div>
+        </div>
+        <div class="field-group">
+          <label for="default_category">Default category (optional, CSV only)</label>
+          <input id="default_category" type="text" placeholder="e.g. Reception FAQ" />
+        </div>
+
+        <button class="btn-primary" type="submit">Upload &amp; build NLP</button>
+        <p id="upload-status" class="muted"></p>
+      </form>
+    </div>
+  </div>
+</section>
+{% endblock %}
+
+{% block scripts %}
+<script>
+  document.getElementById("load-default-btn").addEventListener("click", async () => {
+    const status = document.getElementById("load-default-status");
+    status.textContent = "Loading default dataset... This may take 1–2 minutes.";
+    const btn = document.getElementById("load-default-btn");
+    btn.disabled = true;
+
+    const formData = new FormData();
+    formData.append("default_campus", document.getElementById("load-default-campus")?.value || "Main Campus");
+
+    try {
+      const res = await fetch("{{ url_for('load_default_dataset') }}", {
+        method: "POST",
+        body: formData,
+        credentials: "same-origin",
+      });
+      const text = await res.text();
+      let data;
+      try {
+        data = JSON.parse(text);
+      } catch {
+        status.textContent = "Session may have expired or server returned an error. Please log in again and try.";
+        return;
+      }
+      if (res.ok) {
+        status.textContent = "Loaded " + (data.count || 0) + " FAQs. Embeddings updated.";
+      } else {
+        status.textContent = "Error: " + (data.error || "Unknown error");
+      }
+    } catch (err) {
+      status.textContent = "Error: " + err.message;
+    } finally {
+      btn.disabled = false;
+    }
+  });
+
+  const rebuildBtn = document.getElementById("rebuild-embeddings-btn");
+  if (rebuildBtn) {
+    rebuildBtn.addEventListener("click", async () => {
+      const status = document.getElementById("rebuild-status");
+      status.textContent = "Rebuilding... This may take 1–2 minutes.";
+      rebuildBtn.disabled = true;
+      try {
+        const res = await fetch("{{ url_for('rebuild_embeddings') }}", {
+          method: "POST",
+          credentials: "same-origin",
+        });
+        const text = await res.text();
+        let data;
+        try {
+          data = JSON.parse(text);
+        } catch {
+          status.textContent = "Error. Please refresh and try again.";
+          return;
+        }
+        if (res.ok) {
+          status.textContent = "Done. Refresh the page.";
+          window.location.reload();
+        } else {
+          status.textContent = "Error: " + (data.error || "Unknown");
+        }
+      } catch (err) {
+        status.textContent = "Error: " + err.message;
+      } finally {
+        rebuildBtn.disabled = false;
+      }
+    });
+  }
+
+  document.getElementById("upload-form").addEventListener("submit", async (e) => {
+    e.preventDefault();
+    const status = document.getElementById("upload-status");
+    status.textContent = "Uploading and processing... This may take a minute.";
+
+    const fileInput = document.getElementById("file");
+    if (!fileInput.files.length) {
+      status.textContent = "Please choose a CSV or JSON file.";
+      return;
+    }
+
+    const formData = new FormData();
+    formData.append("file", fileInput.files[0]);
+    formData.append("default_lang", document.getElementById("default_lang").value);
+    formData.append("default_category", document.getElementById("default_category").value);
+    formData.append("default_campus", document.getElementById("default_campus")?.value || "Main Campus");
+
+    try {
+      const res = await fetch("{{ url_for('upload_faqs') }}", {
+        method: "POST",
+        body: formData,
+        credentials: "same-origin",
+      });
+      const text = await res.text();
+      let data;
+      try {
+        data = JSON.parse(text);
+      } catch {
+        status.textContent = "Session may have expired or server returned an error. Please log in again and try.";
+        return;
+      }
+      if (res.ok) {
+        status.textContent = "Upload successful. " + (data.count ? data.count + " FAQs. " : "") + "Embeddings updated.";
+      } else {
+        status.textContent = "Error: " + (data.error || "Unknown error");
+      }
+    } catch (err) {
+      status.textContent = "Error: " + err.message;
+    }
+  });
+</script>
+{% endblock %}
+

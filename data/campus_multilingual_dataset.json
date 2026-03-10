@@ -1,0 +1,33 @@
+{
+  "faqs": [
+    {"question": "How can I take admission?", "answer": "Admissions are conducted online through the official website. Please check eligibility criteria before applying.", "language": "en", "category": "Admissions"},
+    {"question": "Admission process", "answer": "The admission process includes online registration, document verification, merit list publication, and fee payment.", "language": "en", "category": "Admissions"},
+    {"question": "Documents required for admission", "answer": "Marksheet, Aadhaar card, passport photos, caste certificate if applicable, and transfer certificate are required.", "language": "en", "category": "Admissions"},
+    {"question": "प्रवेश प्रक्रिया क्या है?", "answer": "प्रवेश प्रक्रिया ऑनलाइन होती है। आवेदन करने से पहले पात्रता जांच लें।", "language": "hi", "category": "Admissions"},
+    {"question": "प्रवेश प्रक्रिया काय आहे?", "answer": "प्रवेश प्रक्रिया ऑनलाइन आहे. अर्ज करण्यापूर्वी पात्रता तपासा.", "language": "mr", "category": "Admissions"},
+    {"question": "Tell me about placements at the campus", "answer": "Our college has a dedicated Training and Placement Cell. Top companies visit every year for recruitment. Reputed IT and core companies visit for campus recruitment.", "language": "en", "category": "Placements"},
+    {"question": "Placement details", "answer": "Top companies visit every year for recruitment. The highest package varies every year based on company offers.", "language": "en", "category": "Placements"},
+    {"question": "Which companies visit for placements?", "answer": "Reputed IT and core companies visit for campus recruitment.", "language": "en", "category": "Placements"},
+    {"question": "Highest package", "answer": "The highest package varies every year based on company offers.", "language": "en", "category": "Placements"},
+    {"question": "प्लेसमेंट के बारे में बताएं", "answer": "कॉलेज में ट्रेनिंग और प्लेसमेंट सेल है। हर साल कई बड़ी कंपनियां आती हैं।", "language": "hi", "category": "Placements"},
+    {"question": "प्लेसमेंट बद्दल माहिती द्या", "answer": "कॉलेजमध्ये ट्रेनिंग आणि प्लेसमेंट सेल आहे. दरवर्षी नामांकित कंपन्या येतात.", "language": "mr", "category": "Placements"},
+    {"question": "Tell me about hostel at the campus", "answer": "Separate hostel facilities are available for boys and girls. Hostel includes WiFi, mess and security.", "language": "en", "category": "Hostel"},
+    {"question": "Is hostel available?", "answer": "Separate hostel facilities are available for boys and girls.", "language": "en", "category": "Hostel"},
+    {"question": "Hostel facilities", "answer": "Hostel includes WiFi, mess and security. Students must follow discipline and mess rules.", "language": "en", "category": "Hostel"},
+    {"question": "क्या हॉस्टल उपलब्ध है?", "answer": "लड़कों और लड़कियों के लिए अलग हॉस्टल है। हॉस्टल में वाई-फाई और मेस सुविधा है।", "language": "hi", "category": "Hostel"},
+    {"question": "हॉस्टेल उपलब्ध आहे का?", "answer": "मुलांसाठी आणि मुलींसाठी स्वतंत्र हॉस्टेल आहे. हॉस्टेलमध्ये वायफाय आणि मेस सुविधा आहे.", "language": "mr", "category": "Hostel"},
+    {"question": "What are the library working hours?", "answer": "The library is open from 9 AM to 6 PM on working days.", "language": "en", "category": "Library"},
+    {"question": "How many books can be issued?", "answer": "Students can issue up to 3 books at a time.", "language": "en", "category": "Library"},
+    {"question": "When are semester exams conducted?", "answer": "Semester exams are conducted at the end of each semester.", "language": "en", "category": "Exams"},
+    {"question": "Are scholarships available?", "answer": "Yes, government and merit-based scholarships are available.", "language": "en", "category": "Scholarships"},
+    {"question": "Is bus facility available?", "answer": "Yes, bus services are available from major city locations.", "language": "en", "category": "Transport"},
+    {"question": "What are the canteen timings?", "answer": "The canteen is open from 8 AM to 5 PM.", "language": "en", "category": "Canteen"},
+    {"question": "Are sports facilities available?", "answer": "Yes, indoor and outdoor sports facilities are available.", "language": "en", "category": "Sports"},
+    {"question": "What programming languages are taught in Computer Science?", "answer": "Students learn C, C++, Java, Python, and web technologies.", "language": "en", "category": "Computer Science"},
+    {"question": "What specializations are available in MBA?", "answer": "Finance, Marketing, HR, and Operations are available.", "language": "en", "category": "MBA"},
+    {"question": "What subjects are offered in Arts department?", "answer": "History, Political Science, Sociology, and Psychology are offered.", "language": "en", "category": "Arts"},
+    {"question": "What is the attendance criteria?", "answer": "Students must maintain at least 75 percent attendance.", "language": "en", "category": "Academics"},
+    {"question": "Is Wi-Fi available on campus?", "answer": "Yes, campus-wide Wi-Fi facility is available.", "language": "en", "category": "Facilities"},
+    {"question": "Is there a grievance redressal cell?", "answer": "Yes, students can submit complaints to the grievance cell.", "language": "en", "category": "Administration"}
+  ]
+}

@@ -1,0 +1,31 @@
+{% extends "base.html" %}
+
+{% block title %}Login · Campus Chatbot{% endblock %}
+
+{% block content %}
+<section class="auth-shell">
+  <div class="auth-card">
+    <h1>Welcome back</h1>
+    <p class="sub">Sign in to access the campus chatbot and admin tools.</p>
+
+    <form method="post" class="form">
+      <div class="field-group">
+        <label for="username">Username</label>
+        <input id="username" name="username" type="text" required />
+      </div>
+
+      <div class="field-group">
+        <label for="password">Password</label>
+        <input id="password" name="password" type="password" required />
+      </div>
+
+      <button class="btn-primary full" type="submit">Login</button>
+      <p class="muted">
+        New here?
+        <a href="{{ url_for('register') }}">Create an account</a>
+      </p>
+    </form>
+  </div>
+</section>
+{% endblock %}
+

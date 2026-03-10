@@ -1,0 +1,103 @@
+{% extends "base.html" %}
+
+{% block title %}Chat · Campus Multilingual Chatbot{% endblock %}
+
+{% block content %}
+<section class="hero">
+  <div class="hero-text">
+    <h1>Ask anything about your campus.</h1>
+    <p>
+      Smart, multilingual chatbot that understands
+      <strong>English, Hindi, and Marathi</strong>. Start with a topic below or
+      type your own question.
+    </p>
+
+    <div class="hero-controls">
+      <div class="field-group">
+        <label for="language-select">Chat language</label>
+        <select id="language-select" class="select">
+          {% for lang in language_options %}
+          <option value="{{ lang.code }}">{{ lang.label }}</option>
+          {% endfor %}
+        </select>
+      </div>
+      <div class="field-group">
+        <label for="campus-select">Campus</label>
+        <select id="campus-select" class="select">
+          {% for campus in campuses %}
+          <option value="{{ campus }}">{{ campus }}</option>
+          {% endfor %}
+        </select>
+      </div>
+    </div>
+
+    <div class="quick-topics">
+      <span class="quick-title">Popular topics</span>
+      <div class="chip-row">
+        {% for topic in quick_categories %}
+        <button class="chip" data-topic="{{ topic }}">{{ topic }}</button>
+        {% endfor %}
+      </div>
+    </div>
+  </div>
+
+  {% if faq_count == 0 %}
+  <div class="chat-alert" role="alert">
+    <strong>Dataset not loaded.</strong> An admin must load the FAQ dataset before the chatbot can answer. Go to <a href="{{ url_for('admin_dashboard') }}">Admin</a> and click &ldquo;Load campus_multilingual_dataset.json&rdquo; (requires admin login).
+  </div>
+  {% endif %}
+  <div class="chat-card">
+    <div class="chat-header">
+      <div>
+        <h2>Campus Assistant</h2>
+        <span class="sub">Always-on helpdesk for students & visitors</span>
+      </div>
+      <div class="status-dot">
+        <span class="dot"></span>
+        <span>Online</span>
+      </div>
+    </div>
+
+    <div id="chat-window" class="chat-window">
+      <div class="message bot">
+        <div class="avatar">🤖</div>
+        <div class="bubble">
+          <p>
+            Hi {{ user.username }}! I can answer your campus queries in English,
+            Hindi, or Marathi. Choose a topic or type your question below.
+          </p>
+        </div>
+      </div>
+    </div>
+
+    <div class="chat-input-wrapper">
+      <div id="suggestions-dropdown" class="suggestions-dropdown hidden"></div>
+      <div class="chat-input-panel">
+        <textarea
+          id="chat-input"
+          rows="1"
+          placeholder="Ask a question or use voice..."
+        ></textarea>
+        <button id="voice-btn" class="btn-voice" type="button" title="Voice input">🎤</button>
+        <button id="send-btn" class="btn-primary">Send</button>
+      </div>
+    </div>
+    <div id="typing-indicator" class="typing-indicator hidden">
+      <span class="dot"></span><span class="dot"></span><span class="dot"></span>
+      <span class="label">Assistant is typing...</span>
+    </div>
+  </div>
+</section>
+{% endblock %}
+
+{% block scripts %}
+<script>
+  window.CHAT_CONFIG = {
+    chatApiUrl: "{{ url_for('chat_api') }}",
+    feedbackApiUrl: "{{ url_for('feedback_api') }}",
+    suggestApiUrl: "{{ url_for('suggest_api') }}",
+  };
+</script>
+<script src="{{ url_for('static', filename='js/chat.js') }}"></script>
+{% endblock %}
+
