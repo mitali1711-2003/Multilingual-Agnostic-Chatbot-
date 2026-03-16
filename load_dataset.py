@@ -44,6 +44,7 @@ def main():
 
     with db_session() as s:
         count = 0
+        skipped = 0
         for item in faqs_list:
             q = str(item.get("question", "")).strip()
             a = str(item.get("answer", "")).strip()
@@ -51,6 +52,13 @@ def main():
                 continue
             lang = str(item.get("language", "en")).strip() or "en"
             cat = str(item.get("category", "")).strip()
+            # Skip duplicates
+            exists = s.query(FAQ).filter_by(
+                question=q, language=lang, category=cat,
+            ).first()
+            if exists:
+                skipped += 1
+                continue
             faq = FAQ(
                 question=q,
                 answer=a,
@@ -61,7 +69,9 @@ def main():
             s.add(faq)
             count += 1
         s.commit()
-        print(f"Loaded {count} FAQs into database.")
+        if skipped:
+            print(f"Skipped {skipped} duplicate FAQs.")
+        print(f"Loaded {count} new FAQs into database.")
         print("Building embeddings (this may take 1-2 minutes)...")
         build_or_update_embeddings(s)
         print("Done. Embeddings built. The chatbot is ready to use.")

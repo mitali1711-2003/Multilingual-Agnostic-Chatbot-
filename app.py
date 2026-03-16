@@ -43,6 +43,23 @@ from nlp_engine import (
     build_or_update_embeddings,
 )
 
+# Fallback when no FAQ matches — localized so Hindi/Marathi users get a reply
+# in their language instead of always English.
+FALLBACK_BY_LANG = {
+    "en": (
+        "Sorry, I could not find an exact match for your question. "
+        "Please try rephrasing or contact the campus reception."
+    ),
+    "hi": (
+        "क्षमा करें, आपके प्रश्न का सटीक उत्तर नहीं मिल सका। "
+        "कृपया प्रश्न को दूसरे शब्दों में पूछें या कैंपस रिसेप्शन से संपर्क करें।"
+    ),
+    "mr": (
+        "माफ करा, तुमच्या प्रश्नाचे अचूक उत्तर सापडले नाही. "
+        "कृपया प्रश्न वेगळ्या शब्दांत विचारा किंवा कॅम्पस रिसेप्शनशी संपर्क साधा."
+    ),
+}
+
 
 def create_app(config_class=DevConfig) -> Flask:
     app = Flask(__name__)
@@ -395,6 +412,7 @@ def create_app(config_class=DevConfig) -> Flask:
         default_campus = request.form.get("default_campus", "Main Campus")
 
         with db_session() as s:
+            added = 0
             for item in faqs_list:
                 q = str(item.get("question", "")).strip()
                 a = str(item.get("answer", "")).strip()
@@ -402,12 +420,19 @@ def create_app(config_class=DevConfig) -> Flask:
                     continue
                 lang = str(item.get("language", "en")).strip() or "en"
                 cat = str(item.get("category", "")).strip()
+                # Skip duplicates
+                exists = s.query(FAQ).filter_by(
+                    question=q, language=lang, category=cat,
+                ).first()
+                if exists:
+                    continue
                 faq = FAQ(question=q, answer=a, language=lang, category=cat, campus=default_campus)
                 s.add(faq)
+                added += 1
             s.commit()
             build_or_update_embeddings(s)
 
-        return jsonify({"status": "ok", "count": len(faqs_list)}), 200
+        return jsonify({"status": "ok", "count": added}), 200
 
     @app.route("/admin/rebuild_embeddings", methods=["POST"])
     @login_required
@@ -479,11 +504,8 @@ def create_app(config_class=DevConfig) -> Flask:
             )
 
             if not best_faq:
-                detected = detect_language(message)
-                fallback_text = (
-                    "Sorry, I could not find an exact match for your question. "
-                    "Please try rephrasing or contact the campus reception."
-                )
+                detected = user_lang
+                fallback_text = FALLBACK_BY_LANG.get(detected, FALLBACK_BY_LANG["en"])
 
                 bot_msg = Message(
                     conversation_id=conversation.id,
